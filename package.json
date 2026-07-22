@@ -1,0 +1,69 @@
+{
+    "author": "shacker",
+    "dependencies": {
+        "@rebble/clay": "^1.0.10"
+    },
+    "keywords": [],
+    "name": "hourly-steps",
+    "pebble": {
+        "capabilities": [
+            "configurable",
+            "health"
+        ],
+        "displayName": "Hourly Steps",
+        "enableMultiJS": true,
+        "messageKeys": [
+            "target_daily_steps",
+            "start_hour",
+            "active_hours",
+            "min_per_hour",
+            "minutes_before",
+            "color_background",
+            "color_text",
+            "color_notch_background",
+            "color_notch_text",
+            "color_steps_track",
+            "color_steps_progress",
+            "respect_quiet_time",
+            "use_background_worker",
+            "use_fast_refresh",
+            "use_steps_reward",
+            "active_days[7]"
+        ],
+        "projectType": "native",
+        "resources": {
+            "media": [
+                {
+                    "file": "images/app-icon",
+                    "menuIcon": true,
+                    "name": "app_icon",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/Star-Empty.48.png",
+                    "name": "STAR_EMPTY",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/Star-Full.48.png",
+                    "name": "STAR_FULL",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "emery",
+            "gabbro",
+            "flint"
+        ],
+        "uuid": "7b0dfcf7-3383-492b-aca6-96c6267fca34",
+        "watchapp": {
+            "watchface": false
+        }
+    },
+    "version": "1.0.0"
+}

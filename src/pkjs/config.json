@@ -1,0 +1,158 @@
+[
+  {
+    "type": "heading",
+    "defaultValue": "Hourly Steps Config"
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Timing"
+      },
+			{
+				"type": "slider",
+				"messageKey": "start_hour",
+				"defaultValue": 9,
+				"label": "Hour (24 hr format) to start receiving reminders to move",
+				"min": 0,
+				"max": 23
+			},
+			{
+				"type": "slider",
+				"messageKey": "active_hours",
+				"defaultValue": 8,
+				"label": "Number of hours to receive reminders to move after start hour",
+				"min": 1,
+				"max": 23
+			},
+			{
+				"type": "slider",
+				"messageKey": "minutes_before",
+				"defaultValue": 10,
+				"label": "Minutes before hour to receive a reminder to move, if you haven't hit minimum steps",
+				"min": 5,
+				"max": 30
+			},
+      {
+        "type": "checkboxgroup",
+        "messageKey": "active_days",
+        "label": "Days of Week to receive reminders to move",
+        "defaultValue": [true, true, true, true, true, true, true],
+        "options": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Steps"
+      },
+			{
+				"type": "slider",
+				"messageKey": "target_daily_steps",
+				"defaultValue": 10000,
+				"label": "Number of target daily steps, determines stretch goals",
+				"min": 0,
+				"max": 20000
+			},
+			{
+				"type": "slider",
+				"messageKey": "min_per_hour",
+				"defaultValue": 250,
+				"label": "Minimum Steps per Active Hour, not hitting this will send a reminder",
+				"min": 100,
+				"max": 1000
+			}
+    ]
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Colors"
+      },
+      {
+        "type": "color",
+        "messageKey": "color_background",
+        "defaultValue": "0xFFFFFF",
+        "label": "Background"
+      },
+      {
+        "type": "color",
+        "messageKey": "color_text",
+        "defaultValue": "0x000000",
+        "label": "General Text"
+      },
+      {
+        "type": "color",
+        "messageKey": "color_notch_background",
+        "defaultValue": "0x0000FF",
+        "label": "Goal Notch Background"
+      },
+      {
+        "type": "color",
+        "messageKey": "color_notch_text",
+        "defaultValue": "0xFFFFFF",
+        "label": "Goal Notch Text"
+      },
+      {
+        "type": "color",
+        "messageKey": "color_steps_track",
+        "defaultValue": "0xAAAAAA",
+        "label": "Steps Circle Track"
+      },
+      {
+        "type": "color",
+        "messageKey": "color_steps_progress",
+        "defaultValue": "0x005500",
+        "label": "Steps Circle Progress"
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Misc"
+      },
+      {
+        "type": "toggle",
+        "messageKey": "use_fast_refresh",
+        "label": "Use fast refresh<br/><br/>(Off to update steps once per minute, otherwise they are updated as soon as the OS notifies, which could be 2-15 seconds)",
+        "defaultValue": true
+      },
+      {
+        "type": "toggle",
+        "messageKey": "respect_quiet_time",
+        "label": "Respect Quiet Time<br/><br/>(Off to send reminders even with quiet time on)",
+        "defaultValue": true
+      },
+      {
+        "type": "toggle",
+        "messageKey": "use_steps_reward",
+        "label": "Show Daily Steps complete notification<br/><br/>(On to get a fireworks show upon completing daily steps)",
+        "defaultValue": true
+      },
+      {
+        "type": "toggle",
+        "messageKey": "use_background_worker",
+        "label": "Use background worker<br/><br/>(Recommend keeping this on unless you need the background worker for another app, see below)",
+        "defaultValue": true
+      },
+      {
+        "type": "heading",
+        "size": 6,
+        "defaultValue": "<b>NOTE:</b><br/> Background Worker runs an app permanently in the background.  Pebble only allows one background worker at a time.<br/><br/>If you toggle this off, it uses wakeup timers instead on the start of the hour and in the reminder minute timeframe you set.  Any other app you have open during this time will be closed and it may fail to schedule if other apps are using wakeup timers in the same minute.  It also will only show the steps complete reward if you have the app open already."
+      }
+    ]
+  },
+  {
+    "type": "submit",
+    "defaultValue": "Save"
+  }
+]
