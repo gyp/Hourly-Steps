@@ -56,14 +56,22 @@ typedef struct {
   bool use_background_worker;
   bool use_steps_reward;
   
-  // Keep colors on the bottom so I can skip importing in Background worker
-  // Background worker has no use for this and can't understand "GColor" anyways.
+  // Everything above here is the "worker-visible prefix": Background worker mirrors it in its own
+  // struct and reads it back with a short persist_read_data.  Adding/reordering anything above
+  // means updating worker.c too.
+  //
+  // Everything below here is the "app-only tail".  Colors live here because the worker has no use
+  // for them and can't understand "GColor" anyways.  Note that settings are persisted as a raw
+  // struct with no versioning, so new fields must be appended at the very bottom to keep the
+  // existing fields at their current byte offsets for users upgrading from an older build.
   GColor color_background;
   GColor color_text;
   GColor color_notch_background;
   GColor color_notch_text;
   GColor color_steps_track;
   GColor color_steps_progress;
+
+  bool display_time;
 } settings_state_t;
 
 // Global state container

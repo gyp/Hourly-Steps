@@ -140,6 +140,12 @@
       },
       {
         "type": "toggle",
+        "messageKey": "display_time",
+        "label": "Display time on progress screen<br/><br/>(Hidden while the goal star is showing)",
+        "defaultValue": false
+      },
+      {
+        "type": "toggle",
         "messageKey": "use_background_worker",
         "label": "Use background worker<br/><br/>(Recommend keeping this on unless you need the background worker for another app, see below)",
         "defaultValue": true

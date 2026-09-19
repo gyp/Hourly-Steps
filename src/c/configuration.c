@@ -2,6 +2,7 @@
 #include "configuration.h"
 #include "calculations.h"
 #include "wakeup.h"
+#include "window.h"
 #include "state.h"
 
 static void load_settings() {
@@ -26,6 +27,7 @@ static void swap_timer_type() {
 
 static void handle_inbox_received(DictionaryIterator *iter, void *context) {
   bool need_timer_swap = false;
+  bool need_time_resubscribe = false;
   
   // Load Steps
   Tuple *target_daily_steps_t = dict_find(iter, MESSAGE_KEY_target_daily_steps);
@@ -78,6 +80,15 @@ static void handle_inbox_received(DictionaryIterator *iter, void *context) {
   if(use_steps_reward_t) {
     state.settings.use_steps_reward = use_steps_reward_t->value->int32 == 1;
   }
+  Tuple *display_time_t = dict_find(iter, MESSAGE_KEY_display_time);
+  if(display_time_t) {
+    bool old_state = state.settings.display_time;
+    state.settings.display_time = display_time_t->value->int32 == 1;
+    if(old_state != state.settings.display_time) {
+      // Showing the clock needs a minute tick, so the subscriptions have to be re-evaluated
+      need_time_resubscribe = true;
+    }
+  }
   
   // Load Colors
   Tuple *bg_color_t = dict_find(iter, MESSAGE_KEY_color_background);
@@ -110,6 +121,9 @@ static void handle_inbox_received(DictionaryIterator *iter, void *context) {
   if(need_timer_swap) {
     swap_timer_type();
   }
+  if(need_time_resubscribe) {
+    window_update_time_subscription();
+  }
 }
 
 static void config_defaults() {
@@ -131,6 +145,7 @@ static void config_defaults() {
   state.settings.respect_quiet_time = true;
   state.settings.use_background_worker = true;
   state.settings.use_steps_reward = true;
+  state.settings.display_time = false;
   
   for (int i = 0; i < 7; i++) {
     state.settings.time_active_days[i] = true;

@@ -28,6 +28,7 @@
             "use_background_worker",
             "use_fast_refresh",
             "use_steps_reward",
+            "display_time",
             "active_days[7]"
         ],
         "projectType": "native",

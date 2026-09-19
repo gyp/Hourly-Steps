@@ -1,5 +1,6 @@
 #include <pebble.h>
 #include "state.h"
+#include "window.h"
 #include "calculations.h"
 #include "reward_window.h"
 #include "wakeup.h"
@@ -26,6 +27,14 @@ static const uint32_t ICON_RESOURCES[NUM_STATES] = {
 
 static State step_state = NONE;
 
+// Icon geometry, shared with draw_time so the clock can sit exactly where the icon would be
+#define ICON_SIZE 48
+#define ICON_OFFSET_Y -70
+#define ICON_CENTER_OFFSET_Y (ICON_OFFSET_Y + (ICON_SIZE / 2))
+// graphics_text_layout_get_content_size reports a box with the font's ascent padding baked in, so
+// the glyphs sit low inside it.  This lines the visible digits up with the centre of the icon.
+#define TIME_GLYPH_NUDGE_Y 5
+
 // Ensure MIN macro exists
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
@@ -45,9 +54,16 @@ static void draw_icon(void) {
     s_icon_bitmap = NULL;
   }
   
+  if (!s_bitmap_layer) {
+    return;
+  }
+
   if(step_state != NONE) {
     s_icon_bitmap = gbitmap_create_with_resource(ICON_RESOURCES[step_state]);
     bitmap_layer_set_bitmap(s_bitmap_layer, s_icon_bitmap);
+  } else {
+    // Has to be cleared too, otherwise the layer keeps rendering the bitmap we just destroyed
+    bitmap_layer_set_bitmap(s_bitmap_layer, NULL);
   }
 }
 
@@ -78,6 +94,29 @@ static void draw_arc(GContext* ctx, GRect bounds) {
   graphics_context_set_text_color(ctx, state.settings.color_notch_text);
   GFont font_g = fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
   graphics_draw_text(ctx, "G", font_g, GRect(pos.x - 10, pos.y - 10, 20, 20), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+}
+
+static void draw_time(GContext* ctx, GRect bounds) {
+  // The icon and the clock share the slot above the step count, so the clock is only drawn when
+  // there is no icon.  That covers the case the app is launched on its own to nag about steps.
+  if (!state.settings.display_time || step_state != NONE) {
+    return;
+  }
+
+  char timebuf[8];
+  time_t now = time(NULL);
+  struct tm *tm_now = localtime(&now);
+  bool is_24h = clock_is_24h_style();
+  strftime(timebuf, sizeof(timebuf), is_24h ? "%H:%M" : "%I:%M", tm_now);
+  char *time_text = timebuf;
+  if (!is_24h && time_text[0] == '0') time_text++; // "02:32" -> "2:32"
+
+  GPoint center = grect_center_point(&bounds);
+  GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+  GSize time_sz = graphics_text_layout_get_content_size(time_text, font, GRect(0,0,bounds.size.w,30), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
+  GRect time_frame = GRect(center.x - (time_sz.w/2), center.y + ICON_CENTER_OFFSET_Y - (time_sz.h/2) - TIME_GLYPH_NUDGE_Y, time_sz.w, time_sz.h);
+  graphics_context_set_text_color(ctx, state.settings.color_text);
+  graphics_draw_text(ctx, time_text, font, time_frame, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 }
 
 static void draw_center_info(GContext* ctx, GRect bounds) {
@@ -130,6 +169,7 @@ static void canvas_update_proc(Layer *layer, GContext* ctx) {
   GRect bounds = layer_get_bounds(layer);
   draw_background(ctx, bounds);
   draw_arc(ctx, bounds);
+  draw_time(ctx, bounds);
   draw_center_info(ctx, bounds);
 }
 
@@ -189,7 +229,7 @@ static void main_window_load(Window *window) {
   
   // Icon area
   GPoint center = grect_center_point(&bounds);
-  s_bitmap_layer = bitmap_layer_create(GRect(center.x - 24, center.y - 70, 48, 48));
+  s_bitmap_layer = bitmap_layer_create(GRect(center.x - (ICON_SIZE/2), center.y + ICON_OFFSET_Y, ICON_SIZE, ICON_SIZE));
   bitmap_layer_set_compositing_mode(s_bitmap_layer, GCompOpSet);
   layer_add_child(window_get_root_layer(s_main_window), bitmap_layer_get_layer(s_bitmap_layer));
   draw_icon();
@@ -241,6 +281,31 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   update_steps();
 }
 
+// Lines the service subscriptions up with the current settings.  Called when the window is built
+// and again whenever a setting that affects what we need to listen to is changed.
+void window_update_time_subscription(void) {
+  if (!s_main_window) {
+    return;
+  }
+
+  if(state.settings.use_fast_refresh) {
+    health_service_events_subscribe(health_updates, NULL);
+  } else {
+    health_service_events_unsubscribe();
+  }
+
+  // Fast refresh only fires on movement, so the clock needs a minute tick of its own to stay current
+  if(!state.settings.use_fast_refresh || state.settings.display_time) {
+    tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+  } else {
+    tick_timer_service_unsubscribe();
+  }
+
+  if (s_canvas_layer) {
+    layer_mark_dirty(s_canvas_layer);
+  }
+}
+
 void window_push(void) {
   if (!s_main_window) {
     s_main_window = window_create();
@@ -248,11 +313,7 @@ void window_push(void) {
       .load = main_window_load,
       .unload = main_window_unload,
     });
-    if(state.settings.use_fast_refresh) {
-      health_service_events_subscribe(health_updates, NULL);
-    } else {
-      tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
-    }
+    window_update_time_subscription();
     
     if(state.settings.use_background_worker) {
       // Subscribe to background worker messages, so that we can handle reminders when the app is already open
